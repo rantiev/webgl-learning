@@ -1,0 +1,12 @@
+* {
+	padding: 0;
+	margin: 0;
+}
+
+#raCanvas {
+	display: block;
+	width: 800px;
+	height: 600px;
+	margin:100px auto;
+	background: indigo;
+}
