@@ -1,1 +1,8 @@
+bower_components
+node_modules
+build
 .idea
+*.zip
+*.rar
+*.psd
+*.pdf
