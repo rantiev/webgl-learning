@@ -2,15 +2,7 @@
 	var raWebGL;
 	var gl;
 	var shaderProgram;
-	var cubeVertexPositionBuffer;
-	var cubeVertexColorBuffer;
-	var cubeVertexIndexBuffer;
-	var cubeVertexNormalBuffer;
-	var cubeVertexTextureCoordBuffer;
-	var pMatrix = mat4.create();
-	var mvMatrix = mat4.create();
-	var mvMatrixStack = [];
-	var lastTime = 0;
+
 	var angle = 0;
 	var textureSrc = '../img/glass.gif';
 	var textures = [];
@@ -22,206 +14,6 @@
 	var yRot = 0;
 	var currentlyPressedKeys = {};
 	var elapsed = 0;
-
-	var vertices = [
-		// Front face
-		-1.0, -1.0, 1.0,
-		-1.0, 1.0, 1.0,
-		1.0, 1.0, 1.0,
-		1.0, -1.0, 1.0,
-
-		// Back face
-		-1.0, -1.0, -1.0,
-		-1.0, 1.0, -1.0,
-		1.0, 1.0, -1.0,
-		1.0, -1.0, -1.0,
-
-		// Left face
-		-1.0, -1.0, 1.0,
-		-1.0, 1.0, 1.0,
-		-1.0, 1.0, -1.0,
-		-1.0, -1.0, -1.0,
-
-		// Right face
-		1.0, -1.0, 1.0,
-		1.0, 1.0, 1.0,
-		1.0, 1.0, -1.0,
-		1.0, -1.0, -1.0,
-
-		// Top face
-		-1.0, 1.0, 1.0,
-		-1.0, 1.0, -1.0,
-		1.0, 1.0, -1.0,
-		1.0, 1.0, 1.0,
-
-		// Bottom face
-		-1.0, -1.0, 1.0,
-		-1.0, -1.0, -1.0,
-		1.0, -1.0, -1.0,
-		1.0, -1.0, 1.0
-	];
-
-	var cubeVertexIndices = [
-		0, 1, 2,      0, 2, 3,    // Front face
-		4, 5, 6,      4, 6, 7,    // Back face
-		8, 9, 10,     8, 10, 11,  // Left face
-		12, 13, 14,   12, 14, 15, // Right face
-		16, 17, 18,   16, 18, 19, // Top face
-		20, 21, 22,   20, 22, 23  // Bottom face
-	];
-
-	var vertexNormals = [
-		// Front face
-		0.0,  0.0,  1.0,
-		0.0,  0.0,  1.0,
-		0.0,  0.0,  1.0,
-		0.0,  0.0,  1.0,
-
-		// Back face
-		0.0,  0.0, -1.0,
-		0.0,  0.0, -1.0,
-		0.0,  0.0, -1.0,
-		0.0,  0.0, -1.0,
-
-		// Left face
-		-1.0,  0.0,  0.0,
-		-1.0,  0.0,  0.0,
-		-1.0,  0.0,  0.0,
-		-1.0,  0.0,  0.0,
-
-		// Right face
-		1.0,  0.0,  0.0,
-		1.0,  0.0,  0.0,
-		1.0,  0.0,  0.0,
-		1.0,  0.0,  0.0,
-
-		// Top face
-		0.0,  1.0,  0.0,
-		0.0,  1.0,  0.0,
-		0.0,  1.0,  0.0,
-		0.0,  1.0,  0.0,
-
-		// Bottom face
-		0.0, -1.0,  0.0,
-		0.0, -1.0,  0.0,
-		0.0, -1.0,  0.0,
-		0.0, -1.0,  0.0
-
-
-	];
-
-	var vertextColorsAnimation = [
-		{
-			r: {
-				from: 1,
-				to: 0
-			},
-			g: {
-				from: 0,
-				to: 1
-			},
-			b: {
-				from: 0,
-				to: 0.5
-			},
-			o: {
-				from: 1,
-				to: 1
-			}
-		},
-		{
-			r: {
-				from: 0,
-				to: 0
-			},
-			g: {
-				from: 1,
-				to: 0
-			},
-			b: {
-				from: 0,
-				to: 0
-			},
-			o: {
-				from: 1,
-				to: 1
-			}
-		},
-		{
-			r: {
-				from: 0.5,
-				to: 0
-			},
-			g: {
-				from: 0.5,
-				to: 0
-			},
-			b: {
-				from: 1,
-				to: 0.2
-			},
-			o: {
-				from: 1,
-				to: 1
-			}
-		},
-		{
-			r: {
-				from: 1,
-				to: 0.5
-			},
-			g: {
-				from: 1,
-				to: 0
-			},
-			b: {
-				from: 1,
-				to: 0.5
-			},
-			o: {
-				from: 1,
-				to: 1
-			}
-		}
-	];
-
-	var textureCoords = [
-		// Front face
-		0.0, 0.0,
-		1.0, 0.0,
-		1.0, 1.0,
-		0.0, 1.0,
-
-		// Back face
-		1.0, 0.0,
-		1.0, 1.0,
-		0.0, 1.0,
-		0.0, 0.0,
-
-		// Top face
-		0.0, 1.0,
-		0.0, 0.0,
-		1.0, 0.0,
-		1.0, 1.0,
-
-		// Bottom face
-		1.0, 1.0,
-		0.0, 1.0,
-		0.0, 0.0,
-		1.0, 0.0,
-
-		// Right face
-		1.0, 0.0,
-		1.0, 1.0,
-		0.0, 1.0,
-		0.0, 0.0,
-
-		// Left face
-		0.0, 0.0,
-		1.0, 0.0,
-		1.0, 1.0,
-		0.0, 1.0,
-	];
 
 	function initBuffers() {
 		cubeVertexPositionBuffer = gl.createBuffer();
@@ -265,7 +57,7 @@
 		yRot += (ySpeed * elapsed) / 1000.0;
 
 		mat4.translate(mvMatrix, [0.0, 0.0, camDistance]);
-		mvPushMatrix();
+		raWebGL.mvPushMatrix();
 
 		mat4.rotate(mvMatrix, raWebGL.degToRad(xRot), [1, 0, 0]);
 		mat4.rotate(mvMatrix, raWebGL.degToRad(yRot), [0, 1, 0]);
@@ -367,49 +159,12 @@
 		}
 
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
-		setMatrixUniforms();
+		raWebGL.setMatrixUniforms();
 		gl.drawElements(gl.TRIANGLES, cubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 
-		mvPopMatrix();
+		raWebGL.mvPopMatrix();
 	}
 
-	function translate() {
-		angle += (75 * elapsed) / 1000;
-	}
-
-	function changeProp (prop) {
-		var newProp = prop;
-
-		if (newProp.current === undefined) {
-			newProp.current = newProp.from;
-			newProp.direction = newProp.from > newProp.to ? true : false;
-			newProp.min = Math.min(newProp.from, newProp.to);
-			newProp.max = Math.max(newProp.from, newProp.to);
-		}
-
-		if(!newProp.finished) {
-			if(newProp.from === newProp.to) {
-				newProp.finished = true;
-			} else {
-
-				newProp.current = newProp.direction ? newProp.current - 0.01 : newProp.current + 0.01;
-				newProp.current = parseFloat(newProp.current.toFixed(3));
-
-				if (newProp.current >= newProp.max) {
-					newProp.current = newProp.max;
-					newProp.finished = true;
-					newProp.direction = !newProp.direction;
-				} else if (newProp.current <= newProp.min) {
-					newProp.current = newProp.min;
-					newProp.finished = true;
-					newProp.direction = !newProp.direction;
-				}
-
-			}
-		}
-
-		return newProp;
-	}
 
 	function tick(time) {
 
@@ -421,72 +176,44 @@
 		lastTime = time;
 
 		handleKeys();
-		translate();
+
+		angle += (75 * elapsed) / 1000;
+
 		draw();
 
 		requestAnimationFrame(tick);
 	}
 
-	function setMatrixUniforms() {
-		gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
-		gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
-
-		var normalMatrix = mat3.create();
-		mat4.toInverseMat3(mvMatrix, normalMatrix);
-		mat3.transpose(normalMatrix);
-		gl.uniformMatrix3fv(shaderProgram.nMatrixUniform, false, normalMatrix);
-	}
-
-	function mvPushMatrix() {
-		var copy = mat4.create();
-		mat4.set(mvMatrix, copy);
-		mvMatrixStack.push(copy);
-	}
-
-	function mvPopMatrix() {
-		if (mvMatrixStack.length == 0) {
-			throw "Invalid popMatrix!";
-		}
-		mvMatrix = mvMatrixStack.pop();
-	}
-
-	function handleKeyDown(event) {
-		currentlyPressedKeys[event.keyCode] = true;
-
-		if (String.fromCharCode(event.keyCode) == "F") {
-			filter += 1;
-			if (filter == 3) {
-				filter = 0;
-			}
-		}
-	}
-
-	function handleKeyUp(event) {
-		currentlyPressedKeys[event.keyCode] = false;
-	}
 
 	function handleKeys() {
-		if (currentlyPressedKeys[33]) {
+		var keys = raWebGL.currentlyPressedKeys;
+
+		if (keys[33]) {
 			// Page Up
 			camDistance -= 0.05;
 		}
-		if (currentlyPressedKeys[34]) {
+
+		if (keys[34]) {
 			// Page Down
 			camDistance += 0.05;
 		}
-		if (currentlyPressedKeys[37]) {
+
+		if (keys[37]) {
 			// Left cursor key
 			ySpeed -= 1;
 		}
-		if (currentlyPressedKeys[39]) {
+
+		if (keys[39]) {
 			// Right cursor key
 			ySpeed += 1;
 		}
-		if (currentlyPressedKeys[38]) {
+
+		if (keys[38]) {
 			// Up cursor key
 			xSpeed -= 1;
 		}
-		if (currentlyPressedKeys[40]) {
+
+		if (keys[40]) {
 			// Down cursor key
 			xSpeed += 1;
 		}
@@ -501,9 +228,6 @@
 
 		initBuffers();
 		raWebGL.initTextures(textureSrc);
-
-		document.onkeydown = handleKeyDown;
-		document.onkeyup = handleKeyUp;
 
 		setTimeout(function () {
 			tick();

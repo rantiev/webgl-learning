@@ -4,9 +4,16 @@
 	function RaWebGl () {
 		var o = this;
 
+		o.d = document;
 		o.canvas = null;
 		o.gl = null;
 		o.shaderProgram = null;
+		o.mvMatrix = null;
+		o.mvMatrixStack = null;
+		o.pMatrix = mat4.create();
+		o.mvMatrix = mat4.create();
+		o.mvMatrixStack = [];
+		o.currentlyPressedKeys = [];
 
 		o.init();
 	}
@@ -161,7 +168,56 @@
 		return d * Math.PI / 180;
 	};
 
-	RaWebGl.prototype.setup = function () {
+	RaWebGl.prototype.mvPushMatrix = function () {
+		var o = this;
+		var copy = mat4.create();
+
+		mat4.set(o.mvMatrix, copy);
+		o.mvMatrixStack.push(copy);
+	};
+
+	RaWebGl.prototype.mvPopMatrix = function() {
+		var o = this;
+
+		if (o.mvMatrixStack.length == 0) {
+			throw "Invalid popMatrix!";
+		}
+		o.mvMatrix = o.mvMatrixStack.pop();
+	};
+
+	RaWebGl.prototype.setMatrixUniforms = function () {
+		var o = this;
+
+		o.gl.uniformMatrix4fv(o.shaderProgram.pMatrixUniform, false, o.pMatrix);
+		o.gl.uniformMatrix4fv(o.shaderProgram.mvMatrixUniform, false, o.mvMatrix);
+
+		var normalMatrix = mat3.create();
+		mat4.toInverseMat3(o.mvMatrix, normalMatrix);
+		mat3.transpose(normalMatrix);
+
+		o.gl.uniformMatrix3fv(o.shaderProgram.nMatrixUniform, false, normalMatrix);
+	};
+
+	RaWebGl.prototype.handleKeyDown = function (e) {
+		var o = this;
+
+		o.currentlyPressedKeys[e.keyCode] = true;
+	};
+
+	RaWebGl.prototype.handleKeyUp = function (e) {
+		var o = this;
+
+		o.currentlyPressedKeys[e.keyCode] = false;
+	};
+
+	RaWebGl.prototype.setupKeysHandlers = function () {
+		var o = this;
+
+		o.d.onkeydown = o.handleKeyDown;
+		o.d.onkeyup = o.handleKeyUp;
+	};
+
+	RaWebGl.prototype.setupGL = function () {
 		var o = this;
 
 		o.gl.enable(o.gl.DEPTH_TEST);
@@ -175,7 +231,8 @@
 
 		o.initGL();
 		o.initShaders();
-		o.setup();
+		o.setupGL();
+		o.setupKeysHandlers();
 	};
 
 	window.RaWebGL = RaWebGl;
