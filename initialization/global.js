@@ -41,6 +41,6 @@
 
 	o.init = init;
 
-	window.raWebGL = o;
+	window.RaWebGL = o;
 
 })();

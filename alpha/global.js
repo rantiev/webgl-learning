@@ -657,7 +657,7 @@
 		}, 10);
 	}
 
-	window.raWebGL = {
+	window.RaWebGL = {
 		init: init
 	};
 

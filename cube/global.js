@@ -390,7 +390,7 @@
 		tick();
 	}
 
-	window.raWebGL = {
+	window.RaWebGL = {
 		init: init
 	};
 
