@@ -17,15 +17,15 @@
 		o.mvMatrix = mat4.create();
 
 		o.mvMatrixStack = [];
-		o.currentlyPressedKeys = [];
 		o.textures = [];
 
 		o.filter = 0;
 		o.elapsed = 0;
-		o.lastTime = null;
+		o.lastTime = 0;
 
 		o.drawFunction = drawFunction;
 		o.handleKeysFunction = handleKeysFunction;
+		o.currentlyPressedKeys = {};
 
 		o.init();
 	}
@@ -115,24 +115,24 @@
 		o.shaderProgram.vertexPositionAttribute = o.gl.getAttribLocation(o.shaderProgram, 'aVertexPosition');
 		o.gl.enableVertexAttribArray(o.shaderProgram.vertexPositionAttribute);
 
-		/*		shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, 'aVertexColor');
-		 gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);*/
+		/*o.shaderProgram.vertexColorAttribute = o.gl.getAttribLocation(o.shaderProgram, 'aVertexColor');
+		o.gl.enableVertexAttribArray(o.shaderProgram.vertexColorAttribute);*/
 
-		o.shaderProgram.vertexNormalAttribute = o.gl.getAttribLocation(o.shaderProgram, 'aVertexNormal');
-		o.gl.enableVertexAttribArray(o.shaderProgram.vertexNormalAttribute);
+/*		o.shaderProgram.vertexNormalAttribute = o.gl.getAttribLocation(o.shaderProgram, 'aVertexNormal');
+		o.gl.enableVertexAttribArray(o.shaderProgram.vertexNormalAttribute);*/
 
 		o.shaderProgram.textureCoordAttribute = o.gl.getAttribLocation(o.shaderProgram, 'aTextureCoord');
 		o.gl.enableVertexAttribArray(o.shaderProgram.textureCoordAttribute);
 
 		o.shaderProgram.pMatrixUniform = o.gl.getUniformLocation(o.shaderProgram, 'uPMatrix');
 		o.shaderProgram.mvMatrixUniform = o.gl.getUniformLocation(o.shaderProgram, 'uMVMatrix');
-		o.shaderProgram.nMatrixUniform = o.gl.getUniformLocation(o.shaderProgram, 'uNMatrix');
+		//o.shaderProgram.nMatrixUniform = o.gl.getUniformLocation(o.shaderProgram, 'uNMatrix');
 		o.shaderProgram.samplerUniform = o.gl.getUniformLocation(o.shaderProgram, 'uSampler');
-		o.shaderProgram.useLightingUniform = o.gl.getUniformLocation(o.shaderProgram, 'uUseLighting');
-		o.shaderProgram.lightingDirectionUniform = o.gl.getUniformLocation(o.shaderProgram, 'uLightingDirection');
-		o.shaderProgram.ambientColorUniform = o.gl.getUniformLocation(o.shaderProgram, 'uAmbientColor');
-		o.shaderProgram.directionalColorUniform = o.gl.getUniformLocation(o.shaderProgram, 'uDirectionalColor');
-		o.shaderProgram.alphaUniform = o.gl.getUniformLocation(o.shaderProgram, 'uAlpha');
+		//o.shaderProgram.useLightingUniform = o.gl.getUniformLocation(o.shaderProgram, 'uUseLighting');
+		//o.shaderProgram.lightingDirectionUniform = o.gl.getUniformLocation(o.shaderProgram, 'uLightingDirection');
+		//o.shaderProgram.ambientColorUniform = o.gl.getUniformLocation(o.shaderProgram, 'uAmbientColor');
+		//o.shaderProgram.directionalColorUniform = o.gl.getUniformLocation(o.shaderProgram, 'uDirectionalColor');
+		//o.shaderProgram.alphaUniform = o.gl.getUniformLocation(o.shaderProgram, 'uAlpha');
 	};
 
 	RaWebGL.prototype.addTextures = function () {
@@ -287,8 +287,8 @@
 	RaWebGL.prototype.setupKeysHandlers = function () {
 		var o = this;
 
-		o.d.onkeydown = o.handleKeyDown;
-		o.d.onkeyup = o.handleKeyUp;
+		o.d.onkeydown = o.handleKeyDown.bind(o);
+		o.d.onkeyup = o.handleKeyUp.bind(o);
 	};
 
 	RaWebGL.prototype.setupGL = function () {
@@ -316,8 +316,6 @@
 		mat4.identity(o.mvMatrix);
 
 		o.drawFunction();
-
-		o.mvPopMatrix();
 	};
 
 	RaWebGL.prototype.tick = function (time) {
@@ -338,6 +336,8 @@
 
 	RaWebGL.prototype.setupDrawCycle = function () {
 		var o = this;
+
+		o.tick = o.tick.bind(o);
 
 		setTimeout(function () {
 			o.tick();

@@ -1,85 +1,162 @@
 (function () {
-	var o;
+	var ragl;
 	var gl;
 	var shaderProgram;
 
-	var angle = 0;
+	var effectiveFPMS = 60 / 1000;
+	var zoom = -15;
+	var tilt = 90;
+	var spin = 0;
+
+	var nStars = 10;
+	var stars = [];
+
+	var vertices = [
+		-1.0, -1.0,  0.0,
+		1.0, -1.0,  0.0,
+		-1.0,  1.0,  0.0,
+		1.0,  1.0,  0.0
+	];
+
+	var textureCoords = [
+		0.0, 0.0,
+		1.0, 0.0,
+		0.0, 1.0,
+		1.0, 1.0
+	];
+
 	var textureSrc = '../img/glass.gif';
-	var textures = [];
-	var filter = 0;
-	var camDistance = -7;
-	var xSpeed = 0;
-	var ySpeed = 0;
-	var xRot = 0;
-	var yRot = 0;
+
+	var starVertexPositionBuffer;
+	var starVertexTextureCoordBuffer;
+
+	function Star (startDistance, speedRotation) {
+		var o = this;
+
+		o.angle = null;
+		o.distance = startDistance;
+		o.speedRotation = speedRotation;
+
+		o.randomizeColors();
+	}
+
+	Star.prototype.draw = function () {
+		var o = this;
+
+		ragl.mvPushMatrix();
+
+		mat4.rotate(ragl.mvMatrix, ragl.degToRad(this.angle), [0.0, 1.0, 0.0]);
+		mat4.translate(ragl.mvMatrix, [this.dist, 0.0, 0.0]);
+
+		mat4.rotate(ragl.mvMatrix, ragl.degToRad(-this.angle), [0.0, 1.0, 0.0]);
+		mat4.rotate(ragl.mvMatrix, ragl.degToRad(-tilt), [1.0, 0.0, 0.0]);
+
+		mat4.rotate(ragl.mvMatrix, ragl.degToRad(spin), [0.0, 0.0, 1.0]);
+
+		gl.uniform3f(shaderProgram.colorUniform, this.r, this.g, this.b);
+
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, ragl.textures[0]);
+		gl.uniform1i(shaderProgram.samplerUniform, 0);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, starVertexTextureCoordBuffer);
+		gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, starVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, starVertexPositionBuffer);
+		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, starVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		ragl.setMatrixUniforms();
+		gl.drawArrays(gl.TRIANGLE_STRIP, 0, starVertexPositionBuffer.numItems);
+
+		ragl.mvPopMatrix();
+
+	};
+
+	Star.prototype.animate = function () {
+		var o = this;
+
+		o.angle += o.rotationSpeed * effectiveFPMS * ragl.elapsed;
+		o.dist -= 0.01 * effectiveFPMS  * ragl.elapsed;
+
+		if (o.dist < 0.0) {
+			o.dist += 5.0;
+			o.randomiseColors();
+		}
+	};
+
+	Star.prototype.randomizeColors = function () {
+		var o = this;
+
+		o.r = Math.random();
+		o.g = Math.random();
+		o.b = Math.random();
+	};
 
 	function initBuffers() {
+		starVertexPositionBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, starVertexPositionBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+		starVertexPositionBuffer.itemSize = 3;
+		starVertexPositionBuffer.numItems = 4;
+
+		starVertexTextureCoordBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, starVertexTextureCoordBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+		starVertexTextureCoordBuffer.itemSize = 2;
+		starVertexTextureCoordBuffer.numItems = 4;
+	}
+
+	function createStars () {
+
+		for (var i = 0; i < nStars; i++) {
+			var star = new Star((i / nStars) * 5.0, i / nStars);
+			stars.push(star);
+		}
 
 	}
 
-	function draw() {
-		angle += (75 * o.elapsed) / 1000;
+	function draw () {
 
-		xRot += (xSpeed * o.elapsed) / 1000.0;
-		yRot += (ySpeed * o.elapsed) / 1000.0;
+		mat4.translate(ragl.mvMatrix, [0.0, 0.0, zoom]);
+		mat4.rotate(ragl.mvMatrix, ragl.degToRad(tilt), [1.0, 0.0, 0.0]);
 
-		mat4.translate(o.mvMatrix, [0.0, 0.0, camDistance]);
-		o.mvPushMatrix();
+		stars.forEach(function(item){
+			item.draw();
+			item.animate();
 
-		mat4.rotate(o.mvMatrix, o.degToRad(xRot), [1, 0, 0]);
-		mat4.rotate(o.mvMatrix, o.degToRad(yRot), [0, 1, 0]);
-
-
-		o.addTextures();
-		o.addLightning();
-		o.addBlending();
-
-
-		o.setMatrixUniforms();
-
+			spin += 0.1;
+		});
 
 	}
 
 	function handleKeys() {
-		var keys = o.currentlyPressedKeys;
-
+		var keys = ragl.currentlyPressedKeys;
+		
 		if (keys[33]) {
 			// Page Up
-			camDistance -= 0.05;
+			zoom -= 0.1;
 		}
-
 		if (keys[34]) {
 			// Page Down
-			camDistance += 0.05;
+			zoom += 0.1;
 		}
-
-		if (keys[37]) {
-			// Left cursor key
-			ySpeed -= 1;
-		}
-
-		if (keys[39]) {
-			// Right cursor key
-			ySpeed += 1;
-		}
-
 		if (keys[38]) {
 			// Up cursor key
-			xSpeed -= 1;
+			tilt += 2;
 		}
-
 		if (keys[40]) {
 			// Down cursor key
-			xSpeed += 1;
+			tilt -= 2;
 		}
 	}
 
+	ragl = new RaWebGL(draw, handleKeys);
+	gl = ragl.gl;
+	shaderProgram = ragl.shaderProgram;
 
-	o = new RaWebGL(draw, handleKeys);
-	gl = o.gl;
-	shaderProgram = o.shaderProgram;
-
+	createStars();
 	initBuffers();
-	o.initTextures(textureSrc);
+
+	ragl.initTextures(textureSrc);
 
 })();
