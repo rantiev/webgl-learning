@@ -16,6 +16,8 @@
 		o.pMatrix = mat4.create();
 		o.mvMatrix = mat4.create();
 
+		o.blending = true;
+
 		o.mvMatrixStack = [];
 		o.textures = [];
 
@@ -112,27 +114,17 @@
 
 		o.gl.useProgram(o.shaderProgram);
 
-		o.shaderProgram.vertexPositionAttribute = o.gl.getAttribLocation(o.shaderProgram, 'aVertexPosition');
+		o.shaderProgram.vertexPositionAttribute = o.gl.getAttribLocation(o.shaderProgram, "aVertexPosition");
 		o.gl.enableVertexAttribArray(o.shaderProgram.vertexPositionAttribute);
 
-		/*o.shaderProgram.vertexColorAttribute = o.gl.getAttribLocation(o.shaderProgram, 'aVertexColor');
-		o.gl.enableVertexAttribArray(o.shaderProgram.vertexColorAttribute);*/
-
-/*		o.shaderProgram.vertexNormalAttribute = o.gl.getAttribLocation(o.shaderProgram, 'aVertexNormal');
-		o.gl.enableVertexAttribArray(o.shaderProgram.vertexNormalAttribute);*/
-
-		o.shaderProgram.textureCoordAttribute = o.gl.getAttribLocation(o.shaderProgram, 'aTextureCoord');
+		o.shaderProgram.textureCoordAttribute = o.gl.getAttribLocation(o.shaderProgram, "aTextureCoord");
 		o.gl.enableVertexAttribArray(o.shaderProgram.textureCoordAttribute);
 
-		o.shaderProgram.pMatrixUniform = o.gl.getUniformLocation(o.shaderProgram, 'uPMatrix');
-		o.shaderProgram.mvMatrixUniform = o.gl.getUniformLocation(o.shaderProgram, 'uMVMatrix');
-		//o.shaderProgram.nMatrixUniform = o.gl.getUniformLocation(o.shaderProgram, 'uNMatrix');
-		o.shaderProgram.samplerUniform = o.gl.getUniformLocation(o.shaderProgram, 'uSampler');
-		//o.shaderProgram.useLightingUniform = o.gl.getUniformLocation(o.shaderProgram, 'uUseLighting');
-		//o.shaderProgram.lightingDirectionUniform = o.gl.getUniformLocation(o.shaderProgram, 'uLightingDirection');
-		//o.shaderProgram.ambientColorUniform = o.gl.getUniformLocation(o.shaderProgram, 'uAmbientColor');
-		//o.shaderProgram.directionalColorUniform = o.gl.getUniformLocation(o.shaderProgram, 'uDirectionalColor');
-		//o.shaderProgram.alphaUniform = o.gl.getUniformLocation(o.shaderProgram, 'uAlpha');
+		o.shaderProgram.pMatrixUniform = o.gl.getUniformLocation(o.shaderProgram, "uPMatrix");
+		o.shaderProgram.mvMatrixUniform = o.gl.getUniformLocation(o.shaderProgram, "uMVMatrix");
+		o.shaderProgram.samplerUniform = o.gl.getUniformLocation(o.shaderProgram, "uSampler");
+		o.shaderProgram.colorUniform = o.gl.getUniformLocation(o.shaderProgram, "uColor");
+
 	};
 
 	RaWebGL.prototype.addTextures = function () {
@@ -183,60 +175,37 @@
 	RaWebGL.prototype.addBlending = function () {
 		var o = this;
 
-		var blending = document.getElementById('blending').checked;
-
-		if (blending) {
-			o.gl.disable(o.gl.DEPTH_TEST);
-			o.gl.enable(o.gl.BLEND);
-			o.gl.uniform1f(o.shaderProgram.alphaUniform, parseFloat(document.getElementById('alpha').value));
-		} else {
-			o.gl.disable(o.gl.BLEND);
-			o.gl.enable(o.gl.DEPTH_TEST);
-		}
+		o.gl.blendFunc(o.gl.SRC_ALPHA, o.gl.ONE);
+		o.gl.enable(o.gl.BLEND);
 	};
 
 	RaWebGL.prototype.initTextures = function (src) {
 		var o = this;
 		var textureImage = new Image();
 
-		for (var i=0; i < 3; i++) {
-			var texture = o.gl.createTexture();
-			texture.image = textureImage;
-			o.textures.push(texture);
-		}
+		var texture = o.gl.createTexture();
+		texture.image = textureImage;
+		o.textures.push(texture);
 
 		textureImage.onload = function () {
-			o.handleLoadedTexture(o.textures);
+			o.handleLoadedTexture();
 		};
 
 		textureImage.src = src;
 	};
 
-
-
-	RaWebGL.prototype.handleLoadedTexture = function(textures) {
+	RaWebGL.prototype.handleLoadedTexture = function() {
 		var o = this;
 
 		o.gl.pixelStorei(o.gl.UNPACK_FLIP_Y_WEBGL, true);
-
-		o.gl.bindTexture(o.gl.TEXTURE_2D, textures[0]);
-		o.gl.texImage2D(o.gl.TEXTURE_2D, 0, o.gl.RGBA, o.gl.RGBA, o.gl.UNSIGNED_BYTE, textures[0].image);
-		o.gl.texParameteri(o.gl.TEXTURE_2D, o.gl.TEXTURE_MAG_FILTER, o.gl.NEAREST);
-		o.gl.texParameteri(o.gl.TEXTURE_2D, o.gl.TEXTURE_MIN_FILTER, o.gl.NEAREST);
-
-		o.gl.bindTexture(o.gl.TEXTURE_2D, textures[1]);
-		o.gl.texImage2D(o.gl.TEXTURE_2D, 0, o.gl.RGBA, o.gl.RGBA, o.gl.UNSIGNED_BYTE, textures[1].image);
+		o.gl.bindTexture(o.gl.TEXTURE_2D, o.textures[0]);
+		o.gl.texImage2D(o.gl.TEXTURE_2D, 0, o.gl.RGBA, o.gl.RGBA, o.gl.UNSIGNED_BYTE, o.textures[0].image);
 		o.gl.texParameteri(o.gl.TEXTURE_2D, o.gl.TEXTURE_MAG_FILTER, o.gl.LINEAR);
 		o.gl.texParameteri(o.gl.TEXTURE_2D, o.gl.TEXTURE_MIN_FILTER, o.gl.LINEAR);
-
-		o.gl.bindTexture(o.gl.TEXTURE_2D, textures[2]);
-		o.gl.texImage2D(o.gl.TEXTURE_2D, 0, o.gl.RGBA, o.gl.RGBA, o.gl.UNSIGNED_BYTE, textures[2].image);
-		o.gl.texParameteri(o.gl.TEXTURE_2D, o.gl.TEXTURE_MAG_FILTER, o.gl.LINEAR);
-		o.gl.texParameteri(o.gl.TEXTURE_2D, o.gl.TEXTURE_MIN_FILTER, o.gl.LINEAR_MIPMAP_NEAREST);
-		o.gl.generateMipmap(o.gl.TEXTURE_2D);
-
 		o.gl.bindTexture(o.gl.TEXTURE_2D, null);
-	}
+
+		console.log('texture loaded');
+	};
 
 	RaWebGL.prototype.degToRad = function (d) {
 		return d * Math.PI / 180;
@@ -264,12 +233,6 @@
 
 		o.gl.uniformMatrix4fv(o.shaderProgram.pMatrixUniform, false, o.pMatrix);
 		o.gl.uniformMatrix4fv(o.shaderProgram.mvMatrixUniform, false, o.mvMatrix);
-
-		var normalMatrix = mat3.create();
-		mat4.toInverseMat3(o.mvMatrix, normalMatrix);
-		mat3.transpose(normalMatrix);
-
-		o.gl.uniformMatrix3fv(o.shaderProgram.nMatrixUniform, false, normalMatrix);
 	};
 
 	RaWebGL.prototype.handleKeyDown = function (e) {
@@ -294,9 +257,6 @@
 	RaWebGL.prototype.setupGL = function () {
 		var o = this;
 
-		o.gl.enable(o.gl.DEPTH_TEST);
-		o.gl.depthFunc(o.gl.LESS);
-		o.gl.blendFunc(o.gl.SRC_ALPHA, o.gl.ONE);
 		o.gl.clearColor(0.0, 0.0, 0.0, 1.0);
 	};
 
@@ -313,7 +273,8 @@
 		o.gl.clear(o.gl.COLOR_BUFFER_BIT | o.gl.DEPTH_BUFFER_BIT);
 
 		mat4.perspective(45, o.gl.viewportWidth / o.gl.viewportHeight, 0.1, 100.0, o.pMatrix);
-		mat4.identity(o.mvMatrix);
+
+		o.addBlending();
 
 		o.drawFunction();
 	};
@@ -339,9 +300,9 @@
 
 		o.tick = o.tick.bind(o);
 
-		setTimeout(function () {
+		setTimeout(function() {
 			o.tick();
-		}, 10);
+		}, 1000);
 	};
 
 	RaWebGL.prototype.init = function () {

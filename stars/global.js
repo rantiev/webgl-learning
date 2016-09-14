@@ -3,13 +3,15 @@
 	var gl;
 	var shaderProgram;
 
-	var effectiveFPMS = 60 / 1000;
-	var zoom = -15;
+	var effectiveFPMS = 60 / 100;
+	var zoom = -10;
 	var tilt = 90;
 	var spin = 0;
 
-	var nStars = 10;
+	var nStars = 100;
 	var stars = [];
+
+	var textureSrc = '../img/star.gif';
 
 	var vertices = [
 		-1.0, -1.0,  0.0,
@@ -25,16 +27,14 @@
 		1.0, 1.0
 	];
 
-	var textureSrc = '../img/glass.gif';
-
 	var starVertexPositionBuffer;
 	var starVertexTextureCoordBuffer;
 
 	function Star (startDistance, speedRotation) {
 		var o = this;
 
-		o.angle = null;
-		o.distance = startDistance;
+		o.angle = 0;
+		o.dist = startDistance;
 		o.speedRotation = speedRotation;
 
 		o.randomizeColors();
@@ -45,19 +45,17 @@
 
 		ragl.mvPushMatrix();
 
-		mat4.rotate(ragl.mvMatrix, ragl.degToRad(this.angle), [0.0, 1.0, 0.0]);
-		mat4.translate(ragl.mvMatrix, [this.dist, 0.0, 0.0]);
+		mat4.rotate(ragl.mvMatrix, ragl.degToRad(o.angle), [0.0, 1.0, 0.0]);
+		mat4.translate(ragl.mvMatrix, [o.dist, 0.0, 0.0]);
 
-		mat4.rotate(ragl.mvMatrix, ragl.degToRad(-this.angle), [0.0, 1.0, 0.0]);
+		mat4.rotate(ragl.mvMatrix, ragl.degToRad(-o.angle), [0.0, 1.0, 0.0]);
 		mat4.rotate(ragl.mvMatrix, ragl.degToRad(-tilt), [1.0, 0.0, 0.0]);
 
 		mat4.rotate(ragl.mvMatrix, ragl.degToRad(spin), [0.0, 0.0, 1.0]);
 
-		gl.uniform3f(shaderProgram.colorUniform, this.r, this.g, this.b);
+		gl.uniform3f(shaderProgram.colorUniform, o.r, o.g, o.b);
 
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, ragl.textures[0]);
-		gl.uniform1i(shaderProgram.samplerUniform, 0);
+		ragl.addTextures();
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, starVertexTextureCoordBuffer);
 		gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, starVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -75,12 +73,13 @@
 	Star.prototype.animate = function () {
 		var o = this;
 
-		o.angle += o.rotationSpeed * effectiveFPMS * ragl.elapsed;
+		o.angle += o.speedRotation * effectiveFPMS * ragl.elapsed;
 		o.dist -= 0.01 * effectiveFPMS  * ragl.elapsed;
 
+
 		if (o.dist < 0.0) {
-			o.dist += 5.0;
-			o.randomiseColors();
+			o.dist += 10.0;
+			//o.randomizeColors();
 		}
 	};
 
@@ -117,6 +116,7 @@
 
 	function draw () {
 
+		mat4.identity(ragl.mvMatrix);
 		mat4.translate(ragl.mvMatrix, [0.0, 0.0, zoom]);
 		mat4.rotate(ragl.mvMatrix, ragl.degToRad(tilt), [1.0, 0.0, 0.0]);
 
@@ -136,14 +136,17 @@
 			// Page Up
 			zoom -= 0.1;
 		}
+
 		if (keys[34]) {
 			// Page Down
 			zoom += 0.1;
 		}
+
 		if (keys[38]) {
 			// Up cursor key
 			tilt += 2;
 		}
+
 		if (keys[40]) {
 			// Down cursor key
 			tilt -= 2;
@@ -153,10 +156,12 @@
 	ragl = new RaWebGL(draw, handleKeys);
 	gl = ragl.gl;
 	shaderProgram = ragl.shaderProgram;
-
-	createStars();
 	initBuffers();
 
 	ragl.initTextures(textureSrc);
+
+	createStars();
+
+	ragl.setupDrawCycle();
 
 })();
