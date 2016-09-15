@@ -49,7 +49,7 @@
 		mat4.translate(ragl.mvMatrix, [o.dist, 0.0, 0.0]);
 
 		mat4.rotate(ragl.mvMatrix, ragl.degToRad(-o.angle), [0.0, 1.0, 0.0]);
-		mat4.rotate(ragl.mvMatrix, ragl.degToRad(-tilt), [1.0, 0.0, 0.0]);
+		mat4.rotate(ragl.mvMatrix, ragl.degToRad(-spin), [1.0, 0.0, 0.0]);
 
 		mat4.rotate(ragl.mvMatrix, ragl.degToRad(spin), [0.0, 0.0, 1.0]);
 
