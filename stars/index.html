@@ -16,14 +16,25 @@
     precision mediump float;
 
     varying vec2 vTextureCoord;
+    varying vec4 vVertexPosition;
 
     uniform sampler2D uSampler;
 
     uniform vec3 uColor;
 
+    float snoise(vec2 co){
+        return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+    }
+
     void main(void) {
+        vec4 noise = (vVertexPosition.xyzw / vVertexPosition.wwww) * 0.5 + 0.5;
+
+        if (noise.x > 0.5) {
+            noise.x = 1.0;
+        }
+
         vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-        gl_FragColor = textureColor * vec4(uColor, 1.0) * vec4(0.1, 0.1, 0.3, 1.0);
+        gl_FragColor = textureColor * vec4(uColor, 1.0) * snoise(vTextureCoord);
     }
 	</script>
 
@@ -35,9 +46,11 @@
     uniform mat4 uPMatrix;
 
     varying vec2 vTextureCoord;
+    varying vec4 vVertexPosition;
 
     void main(void) {
         gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        vVertexPosition = gl_Position;
         vTextureCoord = aTextureCoord;
     }
 	</script>
