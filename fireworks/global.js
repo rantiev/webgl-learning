@@ -4,20 +4,20 @@
 	var shaderProgram;
 
 	var effectiveFPMS = 60 / 100;
-	var zoom = -10;
+	var zoom = -15;
 	var tilt = 90;
 	var spin = 0;
 
-	var nStars = 100;
+	var nStars = 30;
 	var stars = [];
 
 	var textureSrc = '../img/star.gif';
 
 	var vertices = [
-		-1.0, -1.0,  0.0,
-		1.0, -1.0,  0.0,
-		-1.0,  1.0,  0.0,
-		1.0,  1.0,  0.0
+		-1.1, -1.1,  0.0,
+		1.1, -1.1,  0.0,
+		-1.1,  1.1,  0.0,
+		1.1,  1.1,  0.0
 	];
 
 	var textureCoords = [
@@ -34,7 +34,7 @@
 		var o = this;
 
 		o.angle = 0;
-		o.dist = startDistance;
+		o.dist = 0;
 		o.speedRotation = speedRotation;
 
 		o.randomizeColors();
@@ -51,17 +51,17 @@
 		mat4.rotate(ragl.mvMatrix, ragl.degToRad(-o.angle), [0.0, 1.0, 0.0]);
 		mat4.rotate(ragl.mvMatrix, ragl.degToRad(-tilt), [1.0, 0.0, 0.0]);
 
-		mat4.rotate(ragl.mvMatrix, ragl.degToRad(spin), [0.0, 0.0, 1.0]);
+		//mat4.rotate(ragl.mvMatrix, ragl.degToRad(spin), [0.0, 0.0, 1.0]);
 
 		gl.uniform3f(shaderProgram.colorUniform, o.r, o.g, o.b);
 
 		ragl.addTextures();
 
-		gl.bindBuffer(gl.ARRAY_BUFFER, starVertexTextureCoordBuffer);
-		gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, starVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
 		gl.bindBuffer(gl.ARRAY_BUFFER, starVertexPositionBuffer);
 		gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, starVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, starVertexTextureCoordBuffer);
+		gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, starVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
 		ragl.setMatrixUniforms();
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, starVertexPositionBuffer.numItems);
@@ -73,13 +73,12 @@
 	Star.prototype.animate = function () {
 		var o = this;
 
-		o.angle += o.speedRotation * effectiveFPMS * ragl.elapsed;
-		o.dist -= 0.01 * effectiveFPMS  * ragl.elapsed;
+		//o.angle += o.speedRotation * effectiveFPMS * ragl.elapsed;
+		o.dist += 0.01 * effectiveFPMS  * ragl.elapsed;
 
-
-		if (o.dist < 0.0) {
-			o.dist += 10.0;
-			//o.randomizeColors();
+		if (o.dist > 10.0) {
+			o.dist = 0.0;
+			o.randomizeColors();
 		}
 	};
 
@@ -108,7 +107,8 @@
 	function createStars () {
 
 		for (var i = 0; i < nStars; i++) {
-			var star = new Star((i / nStars) * 5.0, i / nStars);
+			var star = new Star(i / nStars * 5.0, i / nStars);
+			star.angle = i * 360/* * Math.PI*/ / nStars/* / 180*/;
 			stars.push(star);
 		}
 
