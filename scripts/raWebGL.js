@@ -1,8 +1,14 @@
 (function() {
 	'use strict';
 
-	function RaWebGL (handleKeysFunction, drawFunction) {
+	function RaWebGL (options, handleKeysFunction, drawFunction) {
 		var o = this;
+
+		o.defaults = {
+			enableTextures: true
+		};
+
+		o.options = Object.assign({}, o.defaults, options);
 
 		o.d = document;
 		o.canvas = null;
@@ -19,7 +25,10 @@
 		o.blending = true;
 
 		o.mvMatrixStack = [];
-		o.textures = [];
+
+		if (o.options.enableTextures) {
+			o.textures = [];
+		}
 
 		o.filter = 0;
 		o.elapsed = 0;
@@ -117,8 +126,13 @@
 		o.shaderProgram.vertexPositionAttribute = o.gl.getAttribLocation(o.shaderProgram, "aVertexPosition");
 		o.gl.enableVertexAttribArray(o.shaderProgram.vertexPositionAttribute);
 
-		o.shaderProgram.textureCoordAttribute = o.gl.getAttribLocation(o.shaderProgram, "aTextureCoord");
-		o.gl.enableVertexAttribArray(o.shaderProgram.textureCoordAttribute);
+		o.shaderProgram.vertexColorAttribute = o.gl.getAttribLocation(o.shaderProgram, "aVertexColor");
+		o.gl.enableVertexAttribArray(o.shaderProgram.vertexColorAttribute);
+
+		if (o.options.enableTextures) {
+			o.shaderProgram.textureCoordAttribute = o.gl.getAttribLocation(o.shaderProgram, "aTextureCoord");
+			o.gl.enableVertexAttribArray(o.shaderProgram.textureCoordAttribute);
+		}
 
 		o.shaderProgram.pMatrixUniform = o.gl.getUniformLocation(o.shaderProgram, "uPMatrix");
 		o.shaderProgram.mvMatrixUniform = o.gl.getUniformLocation(o.shaderProgram, "uMVMatrix");

@@ -153,7 +153,7 @@
 		}
 	}
 
-	ragl = new RaWebGL(draw, handleKeys);
+	ragl = new RaWebGL({},draw, handleKeys);
 	gl = ragl.gl;
 	shaderProgram = ragl.shaderProgram;
 	initBuffers();

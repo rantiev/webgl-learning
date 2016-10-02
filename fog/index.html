@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Fog</title>
+	<link rel="stylesheet" href="../styles/global.css"/>
+</head>
+<body>
+	<canvas id="raCanvas" width="640" height="480">
+		Your browser doesn't appear to support the HTML5 <code>&lt;canvas&gt;</code> element.
+	</canvas>
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+        precision mediump float;
+        varying vec4 vVertexColor;
+		varying vec2 vTextureCoord;
+		varying vec4 vVertexPosition;
+
+		uniform sampler2D uSampler;
+
+		uniform vec3 uColor;
+
+		void main(void) {
+			vec2 screenUV = (vVertexPosition.xy / vVertexPosition.ww) * 0.2 + 0.2;
+			vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t) * screenUV);
+            gl_FragColor = vVertexColor;
+		}
+	</script>
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+		attribute vec3 aVertexPosition;
+		attribute vec4 aVertexColor;
+		attribute vec2 aTextureCoord;
+
+		uniform mat4 uMVMatrix;
+		uniform mat4 uPMatrix;
+
+		varying vec4 vVertexColor;
+		varying vec2 vTextureCoord;
+		varying vec4 vVertexPosition;
+
+		void main(void) {
+			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+            vVertexColor = aVertexColor;
+            vTextureCoord = aTextureCoord;
+            vVertexPosition = gl_Position;
+		}
+	</script>
+
+
+	<script src="../libs/gl-matrix-0.9.5.js"></script>
+	<script src="../scripts/RaWebGL.js"></script>
+	<script src="global.js"></script>
+</body>
+</html>
